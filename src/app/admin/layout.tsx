@@ -18,6 +18,7 @@ export default function AdminLayout({
 
   const [profile, setProfile] = useState<{ full_name: string; role: string; email: string; avatar_url?: string | null } | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -144,7 +145,7 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-brand-bg text-brand-black flex font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-brand-bg text-brand-black flex flex-col lg:flex-row font-sans overflow-x-hidden">
       <SessionTimeoutListener />
       
       {isLoggingOut && (
@@ -161,8 +162,123 @@ export default function AdminLayout({
         </div>
       )}
 
-      {/* Sidebar */}
-      <aside className="w-64 border-r-4 border-brand-black bg-white flex flex-col justify-between h-screen sticky top-0 shrink-0">
+      {/* Mobile Header Bar */}
+      <header className="lg:hidden w-full bg-white border-b-4 border-brand-black p-4 flex items-center justify-between sticky top-0 z-40 shadow-brutalist-sm select-none">
+        <Link href="/" className="text-xl font-black tracking-tighter">
+          VIBECHECK <span className="text-[10px] text-brand-black/60 font-bold ml-1 uppercase">Admin</span>
+        </Link>
+        
+        {/* Hamburger Icon */}
+        <button 
+          onClick={() => setMobileMenuOpen(true)}
+          className="p-2 border-3 border-brand-black bg-brand-yellow shadow-[2px_2px_0px_#1b1b1b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+        >
+          <svg className="w-6 h-6 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </header>
+
+      {/* Mobile Sidebar drawer */}
+      <div className={`fixed inset-0 z-50 flex lg:hidden transition-opacity duration-300 select-none ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+        {/* Backdrop */}
+        <div 
+          className="fixed inset-0 bg-brand-black/60" 
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        {/* Sidebar drawer content */}
+        <div className={`relative flex flex-col justify-between w-64 max-w-xs h-full bg-white border-r-4 border-brand-black transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          {/* Close button inside drawer */}
+          <div className="absolute top-4 right-4 z-10">
+            <button 
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-8 h-8 border-2 border-brand-black bg-brand-yellow flex items-center justify-center font-black text-sm shadow-[2px_2px_0px_#1b1b1b] cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div>
+            {/* Logo & Portal Info */}
+            <div className="p-6 border-b-4 border-brand-black bg-brand-yellow/10">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-black tracking-tighter hover:skew-x-2 transition-transform block">
+                VIBECHECK
+              </Link>
+              <span className="text-[10px] font-black uppercase tracking-widest text-brand-black/60">
+                Admin Portal
+              </span>
+            </div>
+
+            {/* User Profile Bar */}
+            <div className="p-4 border-b-4 border-brand-black flex items-center gap-3 bg-[#fdfdfd]">
+              <div className="relative w-10 h-10 border-2 border-brand-black rounded-full overflow-hidden bg-brand-yellow flex items-center justify-center">
+                {profile?.avatar_url ? (
+                  <Image 
+                    src={profile.avatar_url} 
+                    alt="Profile Photo" 
+                    fill 
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="font-black text-sm uppercase">
+                    {profile?.full_name 
+                      ? profile.full_name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()
+                      : "SU"
+                    }
+                  </span>
+                )}
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-bold text-brand-black/50 leading-none uppercase">Welcome Back</p>
+                <p className="text-xs font-black text-brand-black leading-tight mt-0.5">
+                  {profile?.full_name || "Admin User"}
+                </p>
+                <p className="text-[9px] font-bold text-brand-black/60 tracking-wider leading-none uppercase">
+                  {profile?.role || "SUPER ADMIN"}
+                </p>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="p-4 space-y-2 mt-4">
+              {menuItems.map((item) => {
+                const isActive = pathname === item.path || (item.path !== "/admin/dashboard" && pathname.startsWith(item.path));
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3.5 border-3 font-bold text-xs uppercase tracking-wider transition-all
+                      ${isActive 
+                        ? "bg-brand-yellow border-brand-black shadow-brutalist-sm translate-x-[-2px] translate-y-[-2px]" 
+                        : "border-transparent hover:border-brand-black hover:bg-brand-bg"
+                      }`}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Bottom Sidebar Elements */}
+          <div className="p-4 border-t-4 border-brand-black bg-white">
+            <button 
+              onClick={handleLogout}
+              className="w-full bg-red-600 text-white border-3 border-brand-black px-4 py-3.5 font-black text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#1b1b1b] flex items-center justify-center gap-2 cursor-pointer transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#1b1b1b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-[0px_0px_0px_0px_#1b1b1b] text-center"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 border-r-4 border-brand-black bg-white flex-col justify-between h-screen sticky top-0 shrink-0 select-none">
         <div>
           {/* Logo & Portal Info */}
           <div className="p-6 border-b-4 border-brand-black bg-brand-yellow/10">
@@ -174,7 +290,7 @@ export default function AdminLayout({
             </span>
           </div>
 
-          {/* User Profile Bar (as seen in Image 1) */}
+          {/* User Profile Bar */}
           <div className="p-4 border-b-4 border-brand-black flex items-center gap-3 bg-[#fdfdfd]">
             <div className="relative w-10 h-10 border-2 border-brand-black rounded-full overflow-hidden bg-brand-yellow flex items-center justify-center">
               {profile?.avatar_url ? (
@@ -241,7 +357,7 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto max-h-screen">
+      <main className="flex-1 overflow-y-auto max-h-[calc(100vh-76px)] lg:max-h-screen">
         {children}
       </main>
 
